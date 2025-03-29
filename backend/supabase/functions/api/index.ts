@@ -14,6 +14,43 @@ serve(async (req) => {
   }
 
   try {
+    // Skip authentication for login endpoint
+    if (req.url.includes('/auth/login')) {
+      const backendUrl = Deno.env.get('BACKEND_URL')
+      if (!backendUrl) {
+        throw new Error('BACKEND_URL environment variable is not set')
+      }
+
+      const response = await fetch(backendUrl + req.url, {
+        method: req.method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: req.body
+      })
+
+      const data = await response.json()
+      return new Response(
+        JSON.stringify(data),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: response.status,
+        }
+      )
+    }
+
+    // For all other endpoints, require authentication
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ code: 401, message: 'Missing authorization header' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      )
+    }
+
     // Create a Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
