@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Opium"
     API_V1_STR: str = "/api/v1"
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://opium-manager.vercel.app"
+    ]
     
     # Database
     DATABASE_URL: str
