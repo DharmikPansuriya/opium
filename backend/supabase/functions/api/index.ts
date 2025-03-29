@@ -7,6 +7,14 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
 }
 
+// Define public endpoints that don't need authentication
+const publicEndpoints = [
+  '/auth/login',
+  '/auth/register',
+  '/docs',
+  '/openapi.json'
+];
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,33 +22,36 @@ serve(async (req) => {
   }
 
   try {
-    // Skip authentication for login endpoint
-    if (req.url.includes('/auth/login')) {
-      const backendUrl = Deno.env.get('BACKEND_URL')
+    const url = new URL(req.url);
+    const isPublicEndpoint = publicEndpoints.some(endpoint => url.pathname.endsWith(endpoint));
+
+    // Skip authentication for public endpoints
+    if (isPublicEndpoint) {
+      const backendUrl = Deno.env.get('BACKEND_URL');
       if (!backendUrl) {
-        throw new Error('BACKEND_URL environment variable is not set')
+        throw new Error('BACKEND_URL environment variable is not set');
       }
 
-      const response = await fetch(backendUrl + req.url, {
+      const response = await fetch(backendUrl + url.pathname, {
         method: req.method,
         headers: {
           'Content-Type': 'application/json'
         },
         body: req.body
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       return new Response(
         JSON.stringify(data),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: response.status,
         }
-      )
+      );
     }
 
-    // For all other endpoints, require authentication
-    const authHeader = req.headers.get('Authorization')
+    // For protected endpoints, require authentication
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
         JSON.stringify({ code: 401, message: 'Missing authorization header' }),
@@ -48,7 +59,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 401 
         }
-      )
+      );
     }
 
     // Create a Supabase client
