@@ -27,7 +27,6 @@ export default function PasswordsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [sharedPasswordsCount, setSharedPasswordsCount] = useState(0);
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
