@@ -1,5 +1,4 @@
 # OPIUM - Secure Password Manager
-
 A modern, secure password manager built with Next.js and FastAPI.
 
 ## Features
