@@ -10,13 +10,20 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Set up CORS
+# Set up CORS with specific origins
+origins = [
+    "https://opium-manager.vercel.app",  # Production
+    "http://localhost:3000",             # Local development
+    "http://localhost:5173",             # Vite development
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include API router
