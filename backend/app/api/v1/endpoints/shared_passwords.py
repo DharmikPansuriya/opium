@@ -23,7 +23,7 @@ def share_password(
     """
     Share password with another user.
     """
-    print(f"Attempting to share password {shared_password_in.password_id} with user {shared_password_in.shared_with_id}")  # Debug log
+    print(f"Attempting to share password {shared_password_in.password_id} with user {shared_password_in.shared_with_id}")
     
     # Check if password exists and belongs to current user
     password = db.query(Password).filter(
@@ -31,7 +31,7 @@ def share_password(
         Password.owner_id == current_user.id
     ).first()
     if not password:
-        print(f"Password {shared_password_in.password_id} not found or not owned by user {current_user.id}")  # Debug log
+        print(f"Password {shared_password_in.password_id} not found or not owned by user {current_user.id}")
         raise HTTPException(status_code=404, detail="Password not found")
 
     # Check if user exists
@@ -92,7 +92,7 @@ def read_received_passwords(
     # Debug logging
     for sp in unique_shares:
         print(f"Found shared password: {sp.password.title} shared by {sp.password.owner.full_name}")
-        print(f"Password owner details: {sp.password.owner.__dict__}")  # Debug log for owner details
+        print(f"Password owner details: {sp.password.owner.__dict__}")
     
     return unique_shares
 
@@ -132,3 +132,31 @@ def revoke_shared_password(
     db.add(shared_password)
     db.commit()
     return {"status": "success"} 
+
+@router.get("/count")
+def get_shared_passwords_count(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> int:
+    """
+    Get count of passwords shared with the current user
+    """
+    print(f"Getting shared passwords count for user {current_user.id}")
+    count = db.query(SharedPassword).filter(
+        SharedPassword.shared_with_id == current_user.id
+    ).count()
+    print(f"Found {count} shared passwords")
+    return count
+
+@router.get("/", response_model=List[SharedPasswordResponse])
+def get_shared_passwords(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all passwords shared with the current user
+    """
+    shared_passwords = db.query(SharedPassword).filter(
+        SharedPassword.user_id == current_user.id
+    ).all()
+    return shared_passwords

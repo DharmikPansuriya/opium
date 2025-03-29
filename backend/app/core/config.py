@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings(BaseSettings):
+    SQLALCHEMY_DATABASE_URL: str
     PROJECT_NAME: str = "Opium"
     API_V1_STR: str = "/api/v1"
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
