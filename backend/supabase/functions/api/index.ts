@@ -1,106 +1,192 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 
-// CORS headers to allow cross-origin requests
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://opium-manager.vercel.app',  // Your Vercel domain
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Origin': 'https://opium-manager.vercel.app',
+  'Access-Control-Allow-Headers': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Max-Age': '86400'
 };
 
-// Define public endpoints that don't need authentication
-const publicEndpoints = [
-  "/auth/login",  // Login is public, no need for Authorization header
-  "/auth/register", // Register is public
-  "/docs",  // Public documentation
-  "/openapi.json", // Public OpenAPI spec
-];
+// Handle OPTIONS preflight request
+function handleOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders
+  });
+}
 
-// The main function that serves requests
-serve(async (req) => {
-  // Handle CORS preflight requests (OPTIONS requests)
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+// Auth route handlers
+async function handleAuthRoutes(req: Request) {
+  const url = new URL(req.url);
+  const path = url.pathname;
+
+  if (path.endsWith('/register') && req.method === 'POST') {
+    const data = await req.json();
+    // Handle registration
+    try {
+      // Your registration logic here
+      return new Response(
+        JSON.stringify({ message: "User registered successfully" }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
   }
 
-  try {
-    const url = new URL(req.url);
-    const isPublicEndpoint = publicEndpoints.some((endpoint) => url.pathname.endsWith(endpoint));
-
-    // Skip authentication for public endpoints
-    if (isPublicEndpoint) {
-      const backendUrl = Deno.env.get("BACKEND_URL");
-      if (!backendUrl) {
-        throw new Error("BACKEND_URL environment variable is not set");
-      }
-
-      const response = await fetch(backendUrl + url.pathname, {
-        method: req.method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: req.body,
-      });
-
-      const data = await response.json();
+  if (path.endsWith('/login') && req.method === 'POST') {
+    const data = await req.json();
+    // Handle login
+    try {
+      // Your login logic here
       return new Response(
-        JSON.stringify(data),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: response.status,
-        }
-      );
-    }
-
-    // For protected endpoints, require authentication
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ code: 401, message: "Missing authorization header" }),
+        JSON.stringify({ message: "Login successful" }),
         { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 401 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
+  }
+}
 
-    // Create a Supabase client for protected routes
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+// User route handlers
+async function handleUserRoutes(req: Request) {
+  const url = new URL(req.url);
+  const path = url.pathname;
 
-    // Get backend URL from environment variable for protected routes
-    const backendUrl = Deno.env.get("BACKEND_URL");
-    if (!backendUrl) {
-      throw new Error("BACKEND_URL environment variable is not set");
+  if (path.endsWith('/me') && req.method === 'GET') {
+    // Get current user
+    try {
+      // Your get user logic here
+      return new Response(
+        JSON.stringify({ message: "User details" }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+  }
+}
+
+// Password route handlers
+async function handlePasswordRoutes(req: Request) {
+  const url = new URL(req.url);
+  const path = url.pathname;
+
+  if (req.method === 'GET') {
+    // Get passwords
+    try {
+      // Your get passwords logic here
+      return new Response(
+        JSON.stringify({ passwords: [] }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+  }
+
+  if (req.method === 'POST') {
+    // Create password
+    const data = await req.json();
+    try {
+      // Your create password logic here
+      return new Response(
+        JSON.stringify({ message: "Password created" }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+  }
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return handleOptions();
+  }
+
+  const url = new URL(req.url);
+  const path = url.pathname;
+
+  try {
+    let response;
+    if (path.startsWith('/api/auth')) {
+      response = await handleAuthRoutes(req);
+    } else if (path.startsWith('/api/users')) {
+      response = await handleUserRoutes(req);
+    } else if (path.startsWith('/api/passwords')) {
+      response = await handlePasswordRoutes(req);
+    } else {
+      response = new Response(
+        JSON.stringify({ error: "Route not found" }),
+        { status: 404 }
+      );
     }
 
-    // Forward the request to your backend (e.g., Python FastAPI application)
-    const response = await fetch(backendUrl + req.url, {
-      method: req.method,
-      headers: req.headers,
-      body: req.body,
+    // Add CORS headers to all responses
+    const responseHeaders = {
+      ...corsHeaders,
+      'Content-Type': 'application/json'
+    };
+
+    return new Response(response.body, {
+      status: response.status,
+      headers: responseHeaders
     });
 
-    // Get the response data
-    const data = await response.json();
-
-    // Return the response with CORS headers
-    return new Response(
-      JSON.stringify(data),
-      { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: response.status,
-      }
-    );
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     );
   }

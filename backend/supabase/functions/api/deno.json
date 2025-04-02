@@ -1,12 +1,8 @@
 {
-  "tasks": {
-    "start": "deno run --allow-net index.ts"
-  },
   "imports": {
-    "std/": "https://deno.land/std@0.168.0/",
-    "supabase": "https://esm.sh/@supabase/supabase-js@2"
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.38.0"
   },
-  "compilerOptions": {
-    "lib": ["deno.window", "deno.ns", "dom"]
+  "tasks": {
+    "start": "deno run --allow-net --allow-env index.ts"
   }
-} 
+}
