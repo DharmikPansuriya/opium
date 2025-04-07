@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings(BaseSettings):
-    SQLALCHEMY_DATABASE_URL: str
     PROJECT_NAME: str = "Opium"
     API_V1_STR: str = "/api/v1"
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
@@ -23,6 +22,10 @@ class Settings(BaseSettings):
     DB_PASSWORD: str
     DB_NAME: str
     
+    @property
+    def SQLALCHEMY_DATABASE_URL(self) -> str:
+        return self.DATABASE_URL
+    
     # JWT
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
@@ -30,10 +33,6 @@ class Settings(BaseSettings):
     
     # Encryption
     ENCRYPTION_KEY: str
-    
-    # Supabase
-    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
     
     # Email
     SMTP_TLS: bool = True
